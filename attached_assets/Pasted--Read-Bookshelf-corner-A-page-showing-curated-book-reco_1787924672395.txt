@@ -1,0 +1,35 @@
+"Read" (Bookshelf corner):
+   - A page showing curated book recommendations as cards. Use this seed list 
+     (title, author, one-line description, mood tag):
+
+     1. Bridget Jones's Diary — Helen Fielding — "Chaotic, funny, and 
+        painfully relatable diary entries." — tag: cozy
+     2. Good Omens — Terry Pratchett & Neil Gaiman — "An angel and demon team 
+        up to stop the apocalypse, played entirely for laughs." — tag: distracting
+     3. Bossypants — Tina Fey — "Sharp, self-deprecating essays on comedy and 
+        career." — tag: short read
+     4. Becoming — Michelle Obama — "A grounded, personal account of power, 
+        identity, and public life." — tag: inspiring
+     5. The Palace Papers — Tina Brown — "Sharp reporting on power dynamics 
+        inside the British monarchy." — tag: juicy
+     6. She Said — Jodi Kantor & Megan Twohey — "The reporters' account of 
+        breaking the Weinstein story — women confronting institutional power 
+        directly." — tag: gripping
+     7. Fascism: A Warning — Madeleine Albright — "Clear-eyed, accessible 
+        framing of how democracies erode." — tag: sobering
+     8. What Happened — Hillary Clinton — "A personal, candid post-mortem on 
+        a national campaign." — tag: reflective
+     9. The Dictator's Handbook — Bruce Bueno de Mesquita & Alastair Smith — 
+        "A darkly logical breakdown of how power actually works." — tag: eye-opening
+     10. Convenience Store Woman — Sayaka Murata — "Short, quietly strange 
+         novel about not fitting the mold society expects." — tag: short read
+     11. Kitchen — Banana Yoshimoto — "Gentle, melancholic novella about grief 
+         and healing." — tag: cozy
+     12. Norwegian Wood — Haruki Murakami — "Nostalgic, atmospheric 
+         coming-of-age novel." — tag: reflective
+
+   - Let users filter by mood tag
+   - For users who select "not really a reader" — show 2-3 alternative 
+     recommendations instead: a short article or a YouTube video link, same 
+     card style (placeholder these for now, I'll supply real ones later)
+   - No account/login needed to browse this page, static list for now

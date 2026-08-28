@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: session
+    description: Lightweight session identity
+  - name: entries
+    description: Daily wellness check-ins
 paths:
   /healthz:
     get:
@@ -24,6 +28,82 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /session:
+    get:
+      operationId: getSession
+      tags: [session]
+      summary: Get the current session
+      description: Returns the current lightweight session identity, if one exists
+      responses:
+        "200":
+          description: Current session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+    post:
+      operationId: createSession
+      tags: [session]
+      summary: Start a lightweight session
+      description: Creates or refreshes a simple username-based session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionInput"
+      responses:
+        "200":
+          description: Session started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "400":
+          description: Invalid username
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /entries:
+    get:
+      operationId: listEntries
+      tags: [entries]
+      summary: List saved check-ins
+      description: Returns this session's check-ins in reverse chronological order
+      responses:
+        "200":
+          description: Saved check-ins
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Entry"
+    post:
+      operationId: createEntry
+      tags: [entries]
+      summary: Save today's check-in
+      description: Creates or replaces the current session's check-in for today
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EntryInput"
+      responses:
+        "201":
+          description: Saved check-in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entry"
+        "400":
+          description: Invalid check-in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +113,102 @@ components:
           type: string
       required:
         - status
+    Session:
+      type: object
+      properties:
+        sessionId:
+          type: ["string", "null"]
+        username:
+          type: ["string", "null"]
+        isSignedIn:
+          type: boolean
+      required: [sessionId, username, isSignedIn]
+    SessionInput:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 40
+      required: [username]
+    Entry:
+      type: object
+      properties:
+        id:
+          type: number
+        entryDate:
+          type: string
+          format: date
+        bookName:
+          type: string
+        pagesRead:
+          type: number
+          minimum: 0
+        steps:
+          type: number
+          minimum: 0
+        stretched:
+          type: boolean
+        skincare:
+          type: boolean
+        waterLiters:
+          type: number
+          minimum: 0
+        enjoyedMeal:
+          type: boolean
+        note:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - entryDate
+        - bookName
+        - pagesRead
+        - steps
+        - stretched
+        - skincare
+        - waterLiters
+        - enjoyedMeal
+        - note
+        - createdAt
+    EntryInput:
+      type: object
+      properties:
+        bookName:
+          type: string
+          maxLength: 120
+        pagesRead:
+          type: number
+          minimum: 0
+        steps:
+          type: number
+          minimum: 0
+        stretched:
+          type: boolean
+        skincare:
+          type: boolean
+        waterLiters:
+          type: number
+          minimum: 0
+        enjoyedMeal:
+          type: boolean
+        note:
+          type: ["string", "null"]
+          maxLength: 200
+      required:
+        - bookName
+        - pagesRead
+        - steps
+        - stretched
+        - skincare
+        - waterLiters
+        - enjoyedMeal
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
 
