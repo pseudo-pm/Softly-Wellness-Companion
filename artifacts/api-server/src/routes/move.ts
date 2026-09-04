@@ -352,7 +352,7 @@ Respond ONLY with valid JSON in this exact structure (no markdown fences, no ext
 
         for (const model of models) {
           try {
-            const apiRes = await fetch(
+            const apiRes: any = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
               {
                 method: "POST",

@@ -71,7 +71,7 @@ Respond ONLY with valid JSON in this exact structure (no markdown fences, no ext
   const models = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-flash-latest"];
   for (const model of models) {
     try {
-      const res = await fetch(
+      const res: any = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
           method: "POST",

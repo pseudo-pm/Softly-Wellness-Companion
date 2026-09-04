@@ -164,7 +164,7 @@ async function callGemini(
 
   for (const model of models) {
     try {
-      const response = await fetch(
+      const response: any = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
           method: "POST",
@@ -214,7 +214,7 @@ async function callOpenAI(
       { role: "user", content: newMessage },
     ];
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response: any = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

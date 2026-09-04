@@ -28,7 +28,7 @@ async function sendMagicLinkEmail(email: string, magicLinkUrl: string): Promise<
 
   if (resendApiKey) {
     try {
-      const response = await fetch("https://api.resend.com/emails", {
+      const resendRes: any = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -53,11 +53,11 @@ async function sendMagicLinkEmail(email: string, magicLinkUrl: string): Promise<
         }),
       });
 
-      if (response.ok) {
+      if (resendRes.ok) {
         logger.info({ email }, "Magic link email sent successfully via Resend");
         return true;
       } else {
-        const errorData = await response.text();
+        const errorData = await resendRes.text();
         logger.warn({ email, errorData }, "Resend API returned non-OK status");
       }
     } catch (err) {
