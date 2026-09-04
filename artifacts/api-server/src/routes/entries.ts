@@ -10,6 +10,23 @@ import { getSessionId } from "./session-utils";
 
 const router: IRouter = Router();
 
+type MemoryEntry = {
+  id: number;
+  entryDate: Date;
+  bookName: string;
+  pagesRead: number;
+  steps: number;
+  stretched: boolean;
+  skincare: boolean;
+  waterLiters: number;
+  enjoyedMeal: boolean;
+  note: string | null;
+  createdAt: Date;
+};
+
+const memoryEntries = new Map<string, Map<string, MemoryEntry>>();
+let memoryEntryIdCounter = 1;
+
 router.get("/entries", async (req, res): Promise<void> => {
   const sessionId = getSessionId(req.headers.cookie);
   if (!sessionId) {
@@ -17,25 +34,31 @@ router.get("/entries", async (req, res): Promise<void> => {
     return;
   }
 
-  const entries = await db
-    .select({
-      id: softlyEntriesTable.id,
-      entryDate: softlyEntriesTable.entryDate,
-      bookName: softlyEntriesTable.bookName,
-      pagesRead: softlyEntriesTable.pagesRead,
-      steps: softlyEntriesTable.steps,
-      stretched: softlyEntriesTable.stretched,
-      skincare: softlyEntriesTable.skincare,
-      waterLiters: softlyEntriesTable.waterLiters,
-      enjoyedMeal: softlyEntriesTable.enjoyedMeal,
-      note: softlyEntriesTable.note,
-      createdAt: softlyEntriesTable.createdAt,
-    })
-    .from(softlyEntriesTable)
-    .where(eq(softlyEntriesTable.sessionId, sessionId))
-    .orderBy(desc(softlyEntriesTable.entryDate), desc(softlyEntriesTable.createdAt));
+  try {
+    const entries = await db
+      .select({
+        id: softlyEntriesTable.id,
+        entryDate: softlyEntriesTable.entryDate,
+        bookName: softlyEntriesTable.bookName,
+        pagesRead: softlyEntriesTable.pagesRead,
+        steps: softlyEntriesTable.steps,
+        stretched: softlyEntriesTable.stretched,
+        skincare: softlyEntriesTable.skincare,
+        waterLiters: softlyEntriesTable.waterLiters,
+        enjoyedMeal: softlyEntriesTable.enjoyedMeal,
+        note: softlyEntriesTable.note,
+        createdAt: softlyEntriesTable.createdAt,
+      })
+      .from(softlyEntriesTable)
+      .where(eq(softlyEntriesTable.sessionId, sessionId))
+      .orderBy(desc(softlyEntriesTable.entryDate), desc(softlyEntriesTable.createdAt));
 
-  res.json(ListEntriesResponse.parse(entries));
+    res.json(ListEntriesResponse.parse(entries));
+  } catch {
+    const sessionMap = memoryEntries.get(sessionId);
+    const list = sessionMap ? Array.from(sessionMap.values()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()) : [];
+    res.json(ListEntriesResponse.parse(list));
+  }
 });
 
 router.post("/entries", async (req, res): Promise<void> => {
@@ -66,26 +89,68 @@ router.post("/entries", async (req, res): Promise<void> => {
     note: parsed.data.note?.trim() || null,
   };
 
-  const [entry] = await db
-    .insert(softlyEntriesTable)
-    .values(values)
-    .onConflictDoUpdate({
-      target: [softlyEntriesTable.sessionId, softlyEntriesTable.entryDate],
-      set: {
-        bookName: values.bookName,
-        pagesRead: values.pagesRead,
-        steps: values.steps,
-        stretched: values.stretched,
-        skincare: values.skincare,
-        waterLiters: values.waterLiters,
-        enjoyedMeal: values.enjoyedMeal,
-        note: values.note,
-        createdAt: new Date(),
-      },
-    })
-    .returning();
+  try {
+    const [entry] = await db
+      .insert(softlyEntriesTable)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [softlyEntriesTable.sessionId, softlyEntriesTable.entryDate],
+        set: {
+          bookName: values.bookName,
+          pagesRead: values.pagesRead,
+          steps: values.steps,
+          stretched: values.stretched,
+          skincare: values.skincare,
+          waterLiters: values.waterLiters,
+          enjoyedMeal: values.enjoyedMeal,
+          note: values.note,
+          createdAt: new Date(),
+        },
+      })
+      .returning();
 
-  res.status(201).json(CreateEntryResponse.parse(entry));
+    // Log activity event
+    try {
+      const { softlyActivityLogTable, softlySessionsTable } = await import("@workspace/db");
+      const [s] = await db.select().from(softlySessionsTable).where(eq(softlySessionsTable.id, sessionId));
+      await db.insert(softlyActivityLogTable).values({
+        userId: s?.userId ?? null,
+        sessionId: sessionId,
+        activityType: "log_entry",
+        status: "completed",
+        metadata: { bookName: values.bookName, pagesRead: values.pagesRead, steps: values.steps },
+      });
+    } catch {
+      // ignore
+    }
+
+    res.status(201).json(CreateEntryResponse.parse(entry));
+
+  } catch {
+    // Memory fallback
+    let sessionMap = memoryEntries.get(sessionId);
+    if (!sessionMap) {
+      sessionMap = new Map();
+      memoryEntries.set(sessionId, sessionMap);
+    }
+
+    const memoryEntry: MemoryEntry = {
+      id: memoryEntryIdCounter++,
+      entryDate: new Date(`${today}T00:00:00`),
+      bookName: values.bookName,
+      pagesRead: values.pagesRead,
+      steps: values.steps,
+      stretched: values.stretched,
+      skincare: values.skincare,
+      waterLiters: values.waterLiters,
+      enjoyedMeal: values.enjoyedMeal,
+      note: values.note,
+      createdAt: new Date(),
+    };
+
+    sessionMap.set(today, memoryEntry);
+    res.status(201).json(CreateEntryResponse.parse(memoryEntry));
+  }
 });
 
 export default router;

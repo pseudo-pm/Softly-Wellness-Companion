@@ -1,32 +1,44 @@
-# [Project name]
+# Softly Wellness Companion
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A gentle daily wellness companion featuring Move, Read, Talk (AI check-in companion), and Log check-in notebooks with zero gamification.
 
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/softly run dev` — run the Vite frontend web client (port 3000)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `pnpm --filter @workspace/db run push` — push Drizzle schema changes to Neon Lakebase Postgres
+- Required env:
+  - `DATABASE_URL`: Pooled Neon connection string (`postgresql://neondb_owner:...@ep-proud-tooth-39069065-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require`)
+  - `DATABASE_URL_UNPOOLED`: Direct Neon connection string for schema migrations
+  - `NEON_PROJECT_ID`: `proud-tooth-39069065`
+  - `NEON_ORG_ID`: `org-frosty-dream-73567984`
+  - `GEMINI_API_KEY` or `OPENAI_API_KEY`: For live Talk companion responses (optional; local empathetic fallback active otherwise)
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Database: Neon Lakebase Postgres (project: `proud-tooth-39069065`, org: `org-frosty-dream-73567984`) + Drizzle ORM
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM
+- Frontend: React 18, Vite 7, Tailwind CSS, Lucide Icons, Wouter routing, TanStack React Query
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- Frontend SPA: [`artifacts/softly`](file:///Users/soumilimajumdar/code/Softly-Wellness-Companion/artifacts/softly)
+- Backend API Server: [`artifacts/api-server`](file:///Users/soumilimajumdar/code/Softly-Wellness-Companion/artifacts/api-server)
+- Database Schemas & Drizzle: [`lib/db`](file:///Users/soumilimajumdar/code/Softly-Wellness-Companion/lib/db)
+- API Spec & Zod: [`lib/api-spec`](file:///Users/soumilimajumdar/code/Softly-Wellness-Companion/lib/api-spec), [`lib/api-zod`](file:///Users/soumilimajumdar/code/Softly-Wellness-Companion/lib/api-zod), [`lib/api-client-react`](file:///Users/soumilimajumdar/code/Softly-Wellness-Companion/lib/api-client-react)
+- Neon Config: [`.neon`](file:///Users/soumilimajumdar/code/Softly-Wellness-Companion/.neon), [`neon.ts`](file:///Users/soumilimajumdar/code/Softly-Wellness-Companion/neon.ts), [`.env`](file:///Users/soumilimajumdar/code/Softly-Wellness-Companion/.env)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **Direct vs Pooled URLs**: Runtime application queries use the pooled connection (`DATABASE_URL`), while Drizzle schema migrations use the direct unpooled endpoint (`DATABASE_URL_UNPOOLED`) to avoid PgBouncer session lock conflicts.
+- **Session Identity**: Sessions are managed with lightweight HTTP-only cookie tokens mapped to `softly_sessions`.
+
 
 ## Product
 

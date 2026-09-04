@@ -1,2 +1,29 @@
 export * from "./generated/api";
-export * from "./generated/types";
+export type {
+  ChatMessage,
+  ChatMessageRole,
+  ClearChatMessagesResponse as ClearChatMessagesResponseType,
+  Entry,
+  EntryInput,
+  Error as ErrorType,
+  HealthStatus,
+  LogoutResponse as LogoutResponseType,
+  LogNotificationEngagementInput,
+  LogNotificationEngagementResponse as LogNotificationEngagementResponseType,
+  MagicLinkInput,
+  MagicLinkResponse as MagicLinkResponseType,
+  MoveRecommendationInput,
+  MoveRecommendationResponse as MoveRecommendationResponseType,
+  MoveVideo,
+  MoveVideosResponse as MoveVideosResponseType,
+  NotificationPreferences as NotificationPreferencesType,
+  ReadRecommendationInput,
+  ReadRecommendationResponse as ReadRecommendationResponseType,
+  SendChatMessageInput as SendChatMessageInputType,
+  SendChatMessageResponse as SendChatMessageResponseType,
+  Session,
+  SessionInput,
+  UpdateNotificationPreferencesInput,
+  VerifyTokenInput,
+} from "./generated/types";
+

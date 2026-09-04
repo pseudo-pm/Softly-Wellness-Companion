@@ -14,6 +14,8 @@ tags:
     description: Lightweight session identity
   - name: entries
     description: Daily wellness check-ins
+  - name: chat
+    description: Emotional check-in chat companion
 paths:
   /healthz:
     get:
@@ -65,6 +67,168 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /auth/magic-link:
+    post:
+      operationId: sendMagicLink
+      tags: [session]
+      summary: Request a passwordless magic link
+      description: Sends a magic link to the provided email address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MagicLinkInput"
+      responses:
+        "200":
+          description: Magic link generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MagicLinkResponse"
+  /auth/verify:
+    post:
+      operationId: verifyMagicLink
+      tags: [session]
+      summary: Verify a magic link token
+      description: Verifies token, creates session tied to user, and sets session cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyTokenInput"
+      responses:
+        "200":
+          description: Session created and logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "400":
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [session]
+      summary: Logout current user
+      description: Clears session cookie and invalidates current session
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+  /read/recommend:
+    post:
+      operationId: getReadRecommendation
+      tags: [entries]
+      summary: Get AI mood-based book or short read recommendations
+      description: Recommends 1-2 books or articles based on user's current mood using Gemini
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReadRecommendationInput"
+      responses:
+        "200":
+          description: AI recommendation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadRecommendationResponse"
+  /move/videos:
+    get:
+      operationId: listMoveVideos
+      tags: [entries]
+      summary: List today's move videos
+      description: Returns a daily rotation of 4 move videos, prioritizing unseen options
+      responses:
+        "200":
+          description: Today's move video rotation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MoveVideosResponse"
+  /move/recommend:
+    post:
+      operationId: getMoveRecommendation
+      tags: [entries]
+      summary: Get AI mood-based move video recommendation
+      description: Recommends the best video from today's rotation based on user's mood using Gemini
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveRecommendationInput"
+      responses:
+        "200":
+          description: AI move recommendation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MoveRecommendationResponse"
+  /notifications/preferences:
+    get:
+      operationId: getNotificationPreferences
+      tags: [session]
+      summary: Get user notification preferences
+      description: Returns preferred time slot, enabled status, and whether checked in today
+      responses:
+        "200":
+          description: User notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+    post:
+      operationId: updateNotificationPreferences
+      tags: [session]
+      summary: Update user notification preferences
+      description: Updates preferred time slot range and enabled status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNotificationPreferencesInput"
+      responses:
+        "200":
+          description: Notification preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+  /notifications/log-engagement:
+    post:
+      operationId: logNotificationEngagement
+      tags: [session]
+      summary: Log in-app reminder engagement or dismissal
+      description: Records reminder_shown, reminder_engaged, or reminder_dismissed to activity_log
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogNotificationEngagementInput"
+      responses:
+        "200":
+          description: Engagement logged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogNotificationEngagementResponse"
+
+
+
+
   /entries:
     get:
       operationId: listEntries
@@ -104,6 +268,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /chat/messages:
+    get:
+      operationId: listChatMessages
+      tags: [chat]
+      summary: List chat companion messages
+      description: Returns all chat messages for the current session
+      responses:
+        "200":
+          description: List of chat messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send a message to the companion
+      description: Sends a message to the AI companion and returns user message and bot response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendChatMessageInput"
+      responses:
+        "200":
+          description: Message and companion response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendChatMessageResponse"
+        "400":
+          description: Invalid chat input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /chat/clear:
+    post:
+      operationId: clearChatMessages
+      tags: [chat]
+      summary: Clear session chat history
+      description: Clears all chat messages for the current session
+      responses:
+        "200":
+          description: Chat history cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClearChatMessagesResponse"
 components:
   schemas:
     HealthStatus:
@@ -118,10 +334,20 @@ components:
       properties:
         sessionId:
           type: ["string", "null"]
+        userId:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
         username:
           type: ["string", "null"]
         isSignedIn:
           type: boolean
+        helpPreferences:
+          type: array
+          items:
+            type: string
+        checkInTime:
+          type: ["string", "null"]
       required: [sessionId, username, isSignedIn]
     SessionInput:
       type: object
@@ -130,7 +356,155 @@ components:
           type: string
           minLength: 1
           maxLength: 40
+        email:
+          type: string
+        helpPreferences:
+          type: array
+          items:
+            type: string
+        checkInTime:
+          type: ["string", "null"]
       required: [username]
+    MagicLinkInput:
+      type: object
+      properties:
+        email:
+          type: string
+      required: [email]
+
+    MagicLinkResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        devMagicLink:
+          type: string
+      required: [success, message]
+    VerifyTokenInput:
+      type: object
+      properties:
+        token:
+          type: string
+      required: [token]
+    LogoutResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required: [success]
+    ReadRecommendationInput:
+      type: object
+      properties:
+        mood:
+          type: string
+          minLength: 1
+          maxLength: 300
+        mode:
+          type: string
+          enum: [books, alternatives]
+      required: [mood]
+    ReadRecommendationResponse:
+      type: object
+      properties:
+        mood:
+          type: string
+        mode:
+          type: string
+        recommendedTitles:
+          type: array
+          items:
+            type: string
+        reason:
+          type: string
+        isCached:
+          type: boolean
+      required: [mood, mode, recommendedTitles, reason]
+    MoveVideo:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        duration:
+          type: string
+        description:
+          type: string
+        href:
+          type: string
+        thumbnail:
+          type: string
+      required: [id, title, duration, description, href, thumbnail]
+    MoveVideosResponse:
+      type: object
+      properties:
+        date:
+          type: string
+        videos:
+          type: array
+          items:
+            $ref: "#/components/schemas/MoveVideo"
+      required: [date, videos]
+    MoveRecommendationInput:
+      type: object
+      properties:
+        mood:
+          type: string
+          minLength: 1
+          maxLength: 300
+      required: [mood]
+    MoveRecommendationResponse:
+      type: object
+      properties:
+        mood:
+          type: string
+        recommendedTitle:
+          type: string
+        reason:
+          type: string
+        isCached:
+          type: boolean
+      required: [mood, recommendedTitle, reason]
+    NotificationPreferences:
+      type: object
+      properties:
+        preferredTimeSlot:
+          type: string
+        enabled:
+          type: boolean
+        checkedInToday:
+          type: boolean
+      required: [preferredTimeSlot, enabled, checkedInToday]
+    UpdateNotificationPreferencesInput:
+      type: object
+      properties:
+        preferredTimeSlot:
+          type: string
+        enabled:
+          type: boolean
+      required: [preferredTimeSlot, enabled]
+    LogNotificationEngagementInput:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [shown, engaged, dismissed]
+        timeSlot:
+          type: string
+      required: [action]
+    LogNotificationEngagementResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required: [success]
+
+
+
+
+
     Entry:
       type: object
       properties:
@@ -211,4 +585,52 @@ components:
         error:
           type: string
       required: [error]
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        sessionId:
+          type: string
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - sessionId
+        - role
+        - content
+        - createdAt
+    SendChatMessageInput:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+        - message
+    SendChatMessageResponse:
+      type: object
+      properties:
+        userMessage:
+          $ref: "#/components/schemas/ChatMessage"
+        botMessage:
+          $ref: "#/components/schemas/ChatMessage"
+      required:
+        - userMessage
+        - botMessage
+    ClearChatMessagesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+
 

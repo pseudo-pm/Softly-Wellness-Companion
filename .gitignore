@@ -11,6 +11,13 @@ out-tsc
 # dependencies
 node_modules
 
+# environment variables
+.env
+.env.local
+.env.*.local
+.neon
+
+
 # IDEs and editors
 /.idea
 .project
@@ -47,3 +54,4 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+.pnpm-store/
